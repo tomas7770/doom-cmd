@@ -71,13 +71,25 @@ def init_args():
         custom_params = args.params
 
 def find_wad(wad_name, wad_paths):
-    # First search for the file in wad_paths
+    # First search for the file in wad_paths, case insensitive
     for p in wad_paths:
         files = os.listdir(p)
+        # Match name exactly if possible,
+        # otherwise look for a file with a known extension.
+        # If two or more files are found, force user to specify.
+        target_f = None
         for f in files:
-            # Remove extension and see if it matches, case insensitive
-            if wad_name.lower() == os.path.splitext(f)[0].lower():
+            f_ext = os.path.splitext(f)[1].lower()
+            if wad_name.lower() == f.lower():
                 return os.path.join(p, f)
+            elif wad_name.lower() == os.path.splitext(f)[0].lower() and \
+            f_ext in {".wad", ".pk3", ".iwad", ".ipk3", ".pk7", ".zip"}:
+                if target_f:
+                    raise(ValueError("Ambiguous WAD \"" + wad_name +"\" specified, \
+                                     please specify the file extension"))
+                target_f = f
+        if target_f:
+            return os.path.join(p, target_f)
     # If not found, interpret as a path, case sensitive
     if os.path.isfile(wad_name) or os.path.isdir(wad_name):
         return wad_name
