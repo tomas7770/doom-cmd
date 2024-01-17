@@ -70,31 +70,30 @@ def init_args():
     if args.params:
         custom_params = args.params
 
-def find_iwad(iwad_name):
-    # First search for the file in iwad_paths
-    for p in iwad_paths:
+def find_wad(wad_name, wad_paths):
+    # First search for the file in wad_paths
+    for p in wad_paths:
         files = os.listdir(p)
         for f in files:
             # Remove extension and see if it matches, case insensitive
-            if iwad_name.lower() == os.path.splitext(f)[0].lower():
+            if wad_name.lower() == os.path.splitext(f)[0].lower():
                 return os.path.join(p, f)
     # If not found, interpret as a path, case sensitive
-    if os.path.isfile(iwad_name) or os.path.isdir(iwad_name):
-        return iwad_name
-    raise(ValueError("Specified IWAD does not exist"))
+    if os.path.isfile(wad_name) or os.path.isdir(wad_name):
+        return wad_name
+    return None
+
+def find_iwad(iwad_name):
+    wad = find_wad(iwad_name, iwad_paths)
+    if not wad:
+        raise(ValueError("Specified IWAD does not exist"))
+    return wad
 
 def find_pwad(pwad_name):
-    # First search for the file in pwad_paths
-    for p in pwad_paths:
-        files = os.listdir(p)
-        for f in files:
-            # Remove extension and see if it matches, case insensitive
-            if pwad_name.lower() == os.path.splitext(f)[0].lower():
-                return os.path.join(p, f)
-    # If not found, interpret as a path, case sensitive
-    if os.path.isfile(pwad_name) or os.path.isdir(pwad_name):
-        return pwad_name
-    raise(ValueError("Specified PWAD \"" + pwad_name + "\" does not exist"))
+    wad = find_wad(pwad_name, pwad_paths)
+    if not wad:
+        raise(ValueError("Specified PWAD \"" + pwad_name + "\" does not exist"))
+    return wad
 
 def main():
     init_config()
