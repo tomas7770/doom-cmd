@@ -103,12 +103,14 @@ def main():
     run_str = engine_path
 
     if selected_iwad:
-        run_str += " -iwad " + find_iwad(selected_iwad)
+        # Note: IWAD path must be resolved to a full ("real") path,
+        # because of changing the working directory (see below)
+        run_str += " -iwad " + os.path.realpath(find_iwad(selected_iwad))
     
     if selected_pwads != []:
         run_str += " -file"
         for pwad in selected_pwads:
-            run_str += " " + find_pwad(pwad)
+            run_str += " " + os.path.realpath(find_pwad(pwad))
 
     if custom_params:
         run_str += " " + custom_params
