@@ -10,6 +10,7 @@ engines = dict()
 
 selected_engine = None
 selected_iwad = None
+selected_iwad_fp = False
 selected_pwads = []
 custom_params = None
 
@@ -44,13 +45,16 @@ def init_config():
 def init_args():
     global selected_engine
     global selected_iwad
+    global selected_iwad_fp
     global selected_pwads
     global custom_params
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--engine", help = "source port to use")
-    parser.add_argument("--iwad", help = "iwad to load")
-    parser.add_argument("--pwad", help = "pwad(s) to load", nargs="+")
+    parser.add_argument("--iwad", help = "iwad to load from IWADPath")
+    parser.add_argument("--pwad", help = "pwad(s) to load from PWADPath", nargs="+")
+    parser.add_argument("--iwadfp", help = "iwad to load from a full path")
+    parser.add_argument("--pwadfp", help = "pwad(s) to load from a full path", nargs="+")
     parser.add_argument("--params", help = "other parameters to pass to the source port")
     args = parser.parse_args()
 
@@ -60,18 +64,32 @@ def init_args():
     if not engines.get(selected_engine):
         raise(ValueError("Specified engine does not exist"))
     
-    if args.iwad:
+    if args.iwad and args.iwadfp:
+        raise(ValueError("--iwad and --iwadfp are mutually exclusive!"))
+    elif args.iwad:
         selected_iwad = args.iwad
+        selected_iwad_fp = False
+    elif args.iwadfp:
+        selected_iwad = args.iwadfp
+        selected_iwad_fp = True
     
     if args.pwad:
         for pwad in args.pwad:
-            selected_pwads.append(pwad)
+            selected_pwads.append((pwad, False))
+    if args.pwadfp:
+        for pwad in args.pwadfp:
+            selected_pwads.append((pwad, True))
 
     if args.params:
         custom_params = args.params
 
-def find_wad(wad_name, wad_paths):
-    # First search for the file in wad_paths, case insensitive
+def find_wad(wad_name, wad_paths, is_full_path):
+    if is_full_path:
+        if os.path.isfile(wad_name) or os.path.isdir(wad_name):
+            return wad_name
+        return None
+    
+    # Search for the file in wad_paths, case insensitive
     for p in wad_paths:
         files = os.listdir(p)
         # Match name exactly if possible,
@@ -90,19 +108,16 @@ def find_wad(wad_name, wad_paths):
                 target_f = f
         if target_f:
             return os.path.join(p, target_f)
-    # If not found, interpret as a path, case sensitive
-    if os.path.isfile(wad_name) or os.path.isdir(wad_name):
-        return wad_name
     return None
 
-def find_iwad(iwad_name):
-    wad = find_wad(iwad_name, iwad_paths)
+def find_iwad(iwad_name, is_full_path):
+    wad = find_wad(iwad_name, iwad_paths, is_full_path)
     if not wad:
         raise(ValueError("Specified IWAD does not exist"))
     return wad
 
-def find_pwad(pwad_name):
-    wad = find_wad(pwad_name, pwad_paths)
+def find_pwad(pwad_name, is_full_path):
+    wad = find_wad(pwad_name, pwad_paths, is_full_path)
     if not wad:
         raise(ValueError("Specified PWAD \"" + pwad_name + "\" does not exist"))
     return wad
@@ -116,12 +131,12 @@ def main():
     if selected_iwad:
         # Note: IWAD path must be resolved to a full ("real") path,
         # because of changing the working directory (see below)
-        run_str += " -iwad " + os.path.realpath(find_iwad(selected_iwad))
+        run_str += " -iwad " + os.path.realpath(find_iwad(selected_iwad, selected_iwad_fp))
     
     if selected_pwads != []:
         run_str += " -file"
         for pwad in selected_pwads:
-            run_str += " " + os.path.realpath(find_pwad(pwad))
+            run_str += " " + os.path.realpath(find_pwad(pwad[0], pwad[1]))
 
     if custom_params:
         run_str += " " + custom_params
