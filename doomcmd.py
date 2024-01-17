@@ -99,7 +99,8 @@ def find_pwad(pwad_name):
 def main():
     init_config()
     init_args()
-    run_str = engines[selected_engine]["path"]
+    engine_path = engines[selected_engine]["path"]
+    run_str = engine_path
 
     if selected_iwad:
         run_str += " -iwad " + find_iwad(selected_iwad)
@@ -111,6 +112,12 @@ def main():
 
     if custom_params:
         run_str += " " + custom_params
+
+    # Change working directory for compatibility reasons
+    # But first check if the directory is valid
+    engine_dir = os.path.split(engine_path)[0]
+    if os.path.isdir(engine_dir):
+        os.chdir(engine_dir)
 
     subprocess.run(run_str)
 
