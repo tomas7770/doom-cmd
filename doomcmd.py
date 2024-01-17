@@ -90,7 +90,16 @@ def find_wad(wad_name, wad_paths, is_full_path):
         return None
     
     # Search for the file in wad_paths, case insensitive
-    for p in wad_paths:
+    wad_name_split = os.path.split(wad_name)
+    wad_filename = wad_name_split[1]
+    for wp in wad_paths:
+        p = wp
+        # If the wad is in a subdirectory, try going to the subdirectory
+        if wad_name_split[0] != "":
+            sub_dir = os.path.join(p, wad_name_split[0])
+            if not os.path.isdir(sub_dir):
+                return None
+            p = sub_dir
         files = os.listdir(p)
         # Match name exactly if possible,
         # otherwise look for a file with a known extension.
@@ -98,9 +107,9 @@ def find_wad(wad_name, wad_paths, is_full_path):
         target_f = None
         for f in files:
             f_ext = os.path.splitext(f)[1].lower()
-            if wad_name.lower() == f.lower():
+            if wad_filename.lower() == f.lower():
                 return os.path.join(p, f)
-            elif wad_name.lower() == os.path.splitext(f)[0].lower() and \
+            elif wad_filename.lower() == os.path.splitext(f)[0].lower() and \
             f_ext in {".wad", ".pk3", ".iwad", ".ipk3", ".pk7", ".zip"}:
                 if target_f:
                     raise(ValueError("Ambiguous WAD \"" + wad_name +"\" specified, \
