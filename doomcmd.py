@@ -2,6 +2,7 @@ import argparse
 import configparser
 import subprocess
 import os
+import sys
 
 cfg = None
 iwad_paths = []
@@ -22,6 +23,20 @@ selected_warp = None
 selected_complevel = None
 custom_params = ""
 
+def get_app_dir():
+    if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+        # PyInstaller bundle
+        return os.path.split(sys._MEIPASS)[0]
+    else:
+        # Normal Python process
+        return os.path.split(os.path.realpath(__file__))[0]
+
+def get_config_path():
+    return os.path.join(get_app_dir(), "config.ini")
+
+def get_engines_path():
+    return os.path.join(get_app_dir(), "engines.ini")
+
 def init_config():
     global cfg
     global default_engine
@@ -30,7 +45,7 @@ def init_config():
     global most_recent_iwad
 
     cfg = configparser.ConfigParser()
-    cfg.read("config.ini")
+    cfg.read(get_config_path())
     if not "General" in cfg.sections():
         raise(ValueError("Missing config section \"General\""))
     
@@ -62,7 +77,7 @@ def init_config():
 
 
     engines_cfg = configparser.ConfigParser()
-    engines_cfg.read("engines.ini")
+    engines_cfg.read(get_engines_path())
     for engine_name in engines_cfg.sections():
         if not engines_cfg[engine_name].get("Path"):
             raise(ValueError("Engine " + engine_name + " does not have a path!"))
@@ -146,7 +161,7 @@ def init_args():
         custom_params += " " + args.params
 
 def save_cfg():
-    with open("config.ini", "w") as cfg_file:
+    with open(get_config_path(), "w") as cfg_file:
         cfg.write(cfg_file)
 
 def find_wad(wad_name, wad_paths, is_full_path):
