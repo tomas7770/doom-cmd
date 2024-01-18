@@ -12,7 +12,7 @@ selected_engine = None
 selected_iwad = None
 selected_iwad_fp = False
 selected_pwads = []
-custom_params = None
+custom_params = ""
 
 def init_config():
     cfg = configparser.ConfigParser()
@@ -56,7 +56,10 @@ def init_args():
     parser.add_argument("--iwadfp", help = "iwad to load from a full path")
     parser.add_argument("--pwadfp", help = "pwad(s) to load from a full path", nargs="+")
     parser.add_argument("--params", help = "other parameters to pass to the source port")
-    args = parser.parse_args()
+    args_tuple = parser.parse_known_args()
+    args = args_tuple[0]
+    for extra_arg in args_tuple[1]:
+        custom_params += " " + extra_arg
 
     if not args.engine:
         raise(NotImplementedError("Default engine not implemented, must specify manually"))
@@ -81,7 +84,7 @@ def init_args():
             selected_pwads.append((pwad, True))
 
     if args.params:
-        custom_params = args.params
+        custom_params += " " + args.params
 
 def find_wad(wad_name, wad_paths, is_full_path):
     if is_full_path:
@@ -159,8 +162,7 @@ def main():
         for pwad in selected_pwads:
             run_str += " " + os.path.realpath(find_pwad(pwad[0], pwad[1]))
 
-    if custom_params:
-        run_str += " " + custom_params
+    run_str += custom_params
 
     # Change working directory for compatibility reasons
     # But first check if the directory is valid
