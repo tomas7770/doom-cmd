@@ -3,6 +3,7 @@ import configparser
 import subprocess
 import os
 
+cfg = None
 iwad_paths = []
 pwad_paths = []
 default_engine = None
@@ -17,6 +18,7 @@ selected_pwads = []
 custom_params = ""
 
 def init_config():
+    global cfg
     global default_engine
     global most_recent_engine
 
@@ -85,6 +87,8 @@ def init_args():
     if not engines.get(selected_engine):
         raise(ValueError("Specified engine does not exist"))
     
+    cfg["General"]["MostRecentEngine"] = selected_engine
+
     if args.iwad and args.iwadfp:
         raise(ValueError("--iwad and --iwadfp are mutually exclusive!"))
     elif args.iwad:
@@ -103,6 +107,10 @@ def init_args():
 
     if args.params:
         custom_params += " " + args.params
+
+def save_cfg():
+    with open("config.ini", "w") as cfg_file:
+        cfg.write(cfg_file)
 
 def find_wad(wad_name, wad_paths, is_full_path):
     if is_full_path:
@@ -167,6 +175,7 @@ def find_pwad(pwad_name, is_full_path):
 def main():
     init_config()
     init_args()
+    save_cfg()
     engine_path = engines[selected_engine]["path"]
     run_str = engine_path
 
