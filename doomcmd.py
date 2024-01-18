@@ -89,7 +89,7 @@ def find_wad(wad_name, wad_paths, is_full_path):
             return wad_name
         return None
     
-    # Search for the file in wad_paths, case insensitive
+    # Search for the file in wad_paths
     wad_name_split = os.path.split(wad_name)
     wad_filename = wad_name_split[1]
     for wp in wad_paths:
@@ -101,19 +101,31 @@ def find_wad(wad_name, wad_paths, is_full_path):
                 return None
             p = sub_dir
         files = os.listdir(p)
-        # Match name exactly if possible,
-        # otherwise look for a file with a known extension.
+
+        # Match name exactly if possible (case sensitive)
+        for f in files:
+            if wad_filename == f:
+                return os.path.join(p, f)
+        # Otherwise, try to match case insensitive
         # If two or more files are found, force user to specify.
         target_f = None
         for f in files:
-            f_ext = os.path.splitext(f)[1].lower()
             if wad_filename.lower() == f.lower():
-                return os.path.join(p, f)
-            elif wad_filename.lower() == os.path.splitext(f)[0].lower() and \
+                if target_f:
+                    raise(ValueError("Ambiguous WAD \"" + wad_name +"\" specified, \
+                                     please specify the file name with correct case and extension"))
+                target_f = f
+        if target_f:
+            return os.path.join(p, target_f)
+        # Otherwise, try to match the name with a known extension (also case insensitive)
+        for f in files:
+            f_ext = os.path.splitext(f)[1].lower()
+            
+            if wad_filename.lower() == os.path.splitext(f)[0].lower() and \
             f_ext in {".wad", ".pk3", ".iwad", ".ipk3", ".pk7", ".zip"}:
                 if target_f:
                     raise(ValueError("Ambiguous WAD \"" + wad_name +"\" specified, \
-                                     please specify the file extension"))
+                                     please specify the file name with correct case and extension"))
                 target_f = f
         if target_f:
             return os.path.join(p, target_f)
