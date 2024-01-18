@@ -5,6 +5,8 @@ import os
 
 iwad_paths = []
 pwad_paths = []
+default_engine = None
+most_recent_engine = None
 
 engines = dict()
 
@@ -15,6 +17,9 @@ selected_pwads = []
 custom_params = ""
 
 def init_config():
+    global default_engine
+    global most_recent_engine
+
     cfg = configparser.ConfigParser()
     cfg.read("config.ini")
     if not "General" in cfg.sections():
@@ -31,6 +36,13 @@ def init_config():
     pwad_path_str = cfg["General"]["PWADPath"]
     for p in pwad_path_str.split(os.pathsep):
         pwad_paths.append(p)
+    
+    if not cfg["General"].get("DefaultEngine"):
+        raise(ValueError("Missing config key \"General/DefaultEngine\""))
+    default_engine = cfg["General"]["DefaultEngine"]
+    if not cfg["General"].get("MostRecentEngine"):
+        raise(ValueError("Missing config key \"General/MostRecentEngine\""))
+    most_recent_engine = cfg["General"]["MostRecentEngine"]
 
 
     engines_cfg = configparser.ConfigParser()
@@ -61,9 +73,15 @@ def init_args():
     for extra_arg in args_tuple[1]:
         custom_params += " " + extra_arg
 
-    if not args.engine:
-        raise(NotImplementedError("Default engine not implemented, must specify manually"))
-    selected_engine = args.engine
+    if args.engine:
+        selected_engine = args.engine
+    else:
+        # Use default engine
+        if default_engine == "-1":
+            selected_engine = most_recent_engine
+        else:
+            selected_engine = default_engine
+
     if not engines.get(selected_engine):
         raise(ValueError("Specified engine does not exist"))
     
