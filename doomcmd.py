@@ -8,6 +8,8 @@ iwad_paths = []
 pwad_paths = []
 default_engine = None
 most_recent_engine = None
+default_iwad = None
+most_recent_iwad = None
 
 engines = dict()
 
@@ -21,6 +23,8 @@ def init_config():
     global cfg
     global default_engine
     global most_recent_engine
+    global default_iwad
+    global most_recent_iwad
 
     cfg = configparser.ConfigParser()
     cfg.read("config.ini")
@@ -46,6 +50,13 @@ def init_config():
         raise(ValueError("Missing config key \"General/MostRecentEngine\""))
     most_recent_engine = cfg["General"]["MostRecentEngine"]
 
+    if not cfg["General"].get("DefaultIWAD"):
+        raise(ValueError("Missing config key \"General/DefaultIWAD\""))
+    default_iwad = cfg["General"]["DefaultIWAD"]
+    if not cfg["General"].get("MostRecentIWAD"):
+        raise(ValueError("Missing config key \"General/MostRecentIWAD\""))
+    most_recent_iwad = cfg["General"]["MostRecentIWAD"]
+
 
     engines_cfg = configparser.ConfigParser()
     engines_cfg.read("engines.ini")
@@ -64,11 +75,13 @@ def init_args():
     global custom_params
 
     parser = argparse.ArgumentParser()
+    iwad_group = parser.add_mutually_exclusive_group()
     parser.add_argument("--engine", help = "source port to use")
-    parser.add_argument("--iwad", help = "iwad to load from IWADPath")
+    iwad_group.add_argument("--iwad", help = "iwad to load from IWADPath")
     parser.add_argument("--pwad", help = "pwad(s) to load from PWADPath", nargs="+")
-    parser.add_argument("--iwadfp", help = "iwad to load from a full path")
+    iwad_group.add_argument("--iwadfp", help = "iwad to load from a full path")
     parser.add_argument("--pwadfp", help = "pwad(s) to load from a full path", nargs="+")
+    iwad_group.add_argument("--noiwad", help = "force loading without an iwad", action="store_true")
     parser.add_argument("--params", help = "other parameters to pass to the source port")
     args_tuple = parser.parse_known_args()
     args = args_tuple[0]
@@ -89,14 +102,22 @@ def init_args():
     
     cfg["General"]["MostRecentEngine"] = selected_engine
 
-    if args.iwad and args.iwadfp:
-        raise(ValueError("--iwad and --iwadfp are mutually exclusive!"))
-    elif args.iwad:
+    if args.iwad:
         selected_iwad = args.iwad
         selected_iwad_fp = False
     elif args.iwadfp:
         selected_iwad = args.iwadfp
         selected_iwad_fp = True
+    elif not args.noiwad:
+        # Use default IWAD
+        if default_iwad == "-1":
+            selected_iwad = most_recent_iwad
+        else:
+            selected_iwad = default_iwad
+        selected_iwad_fp = False
+    
+    if selected_iwad and not selected_iwad_fp:
+        cfg["General"]["MostRecentIWAD"] = selected_iwad
     
     if args.pwad:
         for pwad in args.pwad:
