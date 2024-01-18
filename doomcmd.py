@@ -17,6 +17,9 @@ selected_engine = None
 selected_iwad = None
 selected_iwad_fp = False
 selected_pwads = []
+selected_skill = None
+selected_warp = None
+selected_complevel = None
 custom_params = ""
 
 def init_config():
@@ -72,6 +75,9 @@ def init_args():
     global selected_iwad
     global selected_iwad_fp
     global selected_pwads
+    global selected_skill
+    global selected_warp
+    global selected_complevel
     global custom_params
 
     parser = argparse.ArgumentParser()
@@ -82,6 +88,9 @@ def init_args():
     iwad_group.add_argument("--iwadfp", help = "iwad to load from a full path")
     parser.add_argument("--pwadfp", help = "pwad(s) to load from a full path", nargs="+")
     iwad_group.add_argument("--noiwad", help = "force loading without an iwad", action="store_true")
+    parser.add_argument("-s", "--skill", help = "skill/difficulty level")
+    parser.add_argument("-w", "--warp", help = "map to warp to")
+    parser.add_argument("--cl", help = "complevel")
     parser.add_argument("--params", help = "other parameters to pass to the source port")
     args_tuple = parser.parse_known_args()
     args = args_tuple[0]
@@ -125,6 +134,13 @@ def init_args():
     if args.pwadfp:
         for pwad in args.pwadfp:
             selected_pwads.append((pwad, True))
+    
+    if args.skill:
+        selected_skill = args.skill
+    if args.warp:
+        selected_warp = args.warp
+    if args.cl:
+        selected_complevel = args.cl
 
     if args.params:
         custom_params += " " + args.params
@@ -209,6 +225,13 @@ def main():
         run_str += " -file"
         for pwad in selected_pwads:
             run_str += " " + os.path.realpath(find_pwad(pwad[0], pwad[1]))
+    
+    if selected_skill:
+        run_str += " -skill " + selected_skill
+    if selected_warp:
+        run_str += " -warp " + selected_warp
+    if selected_complevel:
+        run_str += " -complevel " + selected_complevel
 
     run_str += custom_params
 
