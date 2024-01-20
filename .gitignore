@@ -1,2 +1,5 @@
 config.ini
 engines.ini
+build/
+dist/
+doomcmd.spec
