@@ -2,4 +2,4 @@ config.ini
 engines.ini
 build/
 dist/
-doomcmd.spec
+doom-cmd.spec
