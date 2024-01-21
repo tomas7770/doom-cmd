@@ -141,6 +141,8 @@ def init_args():
     elif not args.noiwad:
         # Use default IWAD
         if default_iwad == "-1":
+            if most_recent_iwad == "-1":
+                soft_error("Please specify an IWAD.")
             selected_iwad = most_recent_iwad
         else:
             selected_iwad = default_iwad
@@ -221,7 +223,7 @@ def find_wad(wad_name, wad_paths, is_full_path):
 def find_iwad(iwad_name, is_full_path):
     wad = find_wad(iwad_name, iwad_paths, is_full_path)
     if not wad:
-        raise(ValueError("Specified IWAD does not exist"))
+        raise(ValueError("Specified IWAD \"" + iwad_name + "\" does not exist"))
     return wad
 
 def find_pwad(pwad_name, is_full_path):
