@@ -23,6 +23,10 @@ selected_warp = None
 selected_complevel = None
 custom_params = ""
 
+def soft_error(msg):
+    print(msg)
+    sys.exit()
+
 def get_app_dir():
     if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
         # PyInstaller bundle
@@ -117,6 +121,8 @@ def init_args():
     else:
         # Use default engine
         if default_engine == "-1":
+            if most_recent_engine == "-1":
+                soft_error("Please specify a source port.")
             selected_engine = most_recent_engine
         else:
             selected_engine = default_engine
