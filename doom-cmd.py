@@ -52,12 +52,19 @@ def create_default_config():
         cfg["General"]["MostRecentIWAD"] = "-1"
         cfg.write(cfg_file)
 
+def create_default_engines():
+    with open(get_engines_path(), "a") as _:
+        # Intentionally left blank
+        pass
+
 def init_config():
     global cfg
     global default_engine
     global most_recent_engine
     global default_iwad
     global most_recent_iwad
+
+    create_default_engines()
 
     cfg = configparser.ConfigParser()
     cfg.read(get_config_path())
