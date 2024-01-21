@@ -41,6 +41,17 @@ def get_config_path():
 def get_engines_path():
     return os.path.join(get_app_dir(), "engines.ini")
 
+def create_default_config():
+    with open(get_config_path(), "w") as cfg_file:
+        cfg.add_section("General")
+        cfg["General"]["IWADPath"] = get_app_dir()
+        cfg["General"]["PWADPath"] = get_app_dir()
+        cfg["General"]["DefaultEngine"] = "-1"
+        cfg["General"]["MostRecentEngine"] = "-1"
+        cfg["General"]["DefaultIWAD"] = "-1"
+        cfg["General"]["MostRecentIWAD"] = "-1"
+        cfg.write(cfg_file)
+
 def init_config():
     global cfg
     global default_engine
@@ -51,7 +62,8 @@ def init_config():
     cfg = configparser.ConfigParser()
     cfg.read(get_config_path())
     if not "General" in cfg.sections():
-        raise(ValueError("Missing config section \"General\""))
+        create_default_config()
+        soft_error("Config file created. Edit it and then rerun this.")
     
     if not cfg["General"].get("IWADPath"):
         raise(ValueError("Missing config key \"General/IWADPath\""))
